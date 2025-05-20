@@ -217,7 +217,7 @@ import Imagecomponent from '../custom/Elements/Imagecomponent';
 import LogoComponent from '../custom/Elements/LogoComponent';
 import DividerComponent from '../custom/Elements/DividerComponent';
 import Socialicons from '../custom/Elements/Socialicons';
-import LogoHeader from '../custom/Elements/Logoheader';
+import LogoHeader from '../custom/Elements/LogoHeader';
 import { useDragDrop, useEmailTemplate, useSelectedElement } from '@/app/provider';
 
 import LayoutMenu  from './LayoutMenu'
