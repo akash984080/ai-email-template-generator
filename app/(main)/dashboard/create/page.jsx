@@ -1,8 +1,5 @@
-
-
-
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, Pencil } from 'lucide-react';
 import AIInputbox from '@/components/custom/AIInputbox';
@@ -10,10 +7,18 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
+import { useUserDetail } from '@/app/provider';
 
 const Create = () => {
     const router = useRouter();
     const tId = uuidv4();
+    const { userdetail } = useUserDetail();
+
+    useEffect(() => {
+        if (userdetail) {
+            document.title = `Create Template | ${userdetail.name} | MailCraft AI`
+        }
+    }, [userdetail]);
 
     const handleEditorRouter = () => {
         router.push('/editor/' + tId);

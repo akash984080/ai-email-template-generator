@@ -41,10 +41,6 @@ export const SigninButton = () => {
           id: result?.id ?? result,
         }
 
-        if (typeof window !== "undefined") {
-          localStorage.setItem("userdetails", JSON.stringify(userdetail))
-        }
-
         setuserdetail(userdetail)
       } catch (err) {
         console.error("Login failed:", err)

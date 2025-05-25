@@ -275,3 +275,44 @@ export const DeleteTemplate = mutation({
     return { success: true };
   },
 });
+
+export const updateTemplateStats = mutation({
+  args: {
+    tId: v.string(),
+    email: v.string(),
+    sentCount: v.number(),
+    lastSent: v.number(),
+    lastEdited: v.optional(v.number()),
+    isActive: v.optional(v.boolean())
+  },
+  handler: async (ctx, args) => {
+    try {
+      const templates = await ctx.db
+        .query("emailTemplates")
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("tId"), args.tId),
+            q.eq(q.field("email"), args.email)
+          )
+        )
+        .collect();
+
+      if (templates.length === 0) {
+        throw new Error("Template not found");
+      }
+
+      const docId = templates[0]._id;
+      await ctx.db.patch(docId, {
+        sentCount: args.sentCount,
+        lastSent: args.lastSent,
+        ...(args.lastEdited && { lastEdited: args.lastEdited }),
+        ...(args.isActive !== undefined && { isActive: args.isActive })
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating template stats:", error);
+      throw new Error("Failed to update template statistics");
+    }
+  }
+});

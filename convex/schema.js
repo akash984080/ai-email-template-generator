@@ -2,20 +2,19 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
-  users: defineTable({
-    name: v.string(),
+  emailTemplate: defineTable({
     email: v.string(),
-    picture: v.string(),
-    credits: v.number(),
-  }),
+    design: v.string(),
+    description: v.optional(v.string()),
+    sentCount: v.optional(v.number()),
+    lastSent: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_email", ["email"]),
 
-
-  emailTemplates: defineTable({
-    tId: v.string(),
-    design: v.any(), 
+  user: defineTable({
     email: v.string(),
-    description:v.any()
-  })
-  
+    provider: v.string(),
+    createdAt: v.number(),
+  }).index("by_email", ["email"]),
 });
 

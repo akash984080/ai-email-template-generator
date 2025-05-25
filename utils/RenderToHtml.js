@@ -131,30 +131,31 @@ function renderComponent (component) {
         ? component.textarea
         : [{ text: component.textarea, style: style }];
 
-      return `<div style="
-        color: ${style.color || '#000'};
-        font-size: ${style.fontSize || '16px'};
-        font-family: ${style.fontFamily || 'Arial, Helvetica, sans-serif'};
-        font-weight: ${style.fontWeight || 'normal'};
-        font-style: ${style.fontStyle || 'normal'};
-        text-decoration: ${style.textDecoration || 'none'};
-        background-color: ${style.backgroundColor || 'transparent'};
-        text-align: ${style.textAlign || 'left'};
-        padding: ${style.padding || '8px'};
-        margin: ${style.margin || '0'};
-        line-height: ${style.lineHeight || '1.5'};
-        letter-spacing: ${style.letterSpacing || 'normal'};
-        text-transform: ${style.textTransform || 'none'};
-        text-shadow: ${style.textShadow || 'none'};
-      ">
-        ${segments.map(seg =>
-          `<span style="${
-            Object.entries(seg.style || {})
-              .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v}`)
-              .join('; ')
-          }">${seg.text}</span>`
-        ).join('')}
-      </div>`;
+      // Use table-based layout for better email client compatibility
+      return `
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+          <tr>
+            <td style="
+              color: ${style.color || '#000'};
+              font-family: ${style.fontFamily || 'Arial, Helvetica, sans-serif'};
+              font-size: ${style.fontSize || '16px'};
+              font-weight: ${style.fontWeight || 'normal'};
+              text-align: ${style.textAlign || 'left'};
+              padding: ${style.padding || '8px'};
+              margin: ${style.margin || '0'};
+              line-height: ${style.lineHeight || '1.5'};
+              background-color: ${style.backgroundColor || 'transparent'};
+            ">
+              ${segments.map(seg => {
+                const segmentStyle = Object.entries(seg.style || {})
+                  .filter(([key]) => !['textShadow', 'letterSpacing', 'textTransform'].includes(key)) // Remove unsupported properties
+                  .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v}`)
+                  .join('; ');
+                return `<span style="${segmentStyle}">${seg.text}</span>`;
+              }).join('')}
+            </td>
+          </tr>
+        </table>`;
     }
     case 'Button':
       return `

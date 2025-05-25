@@ -12,17 +12,21 @@ export const Header = () => {
     const { userdetail, setuserdetail } = useUserDetail()
     const [menuOpen, setMenuOpen] = useState(false)
     const router = useRouter()
+
+    // Update document title based on user login status
     useEffect(() => {
-        const storedUser = localStorage.getItem("userdetails");
-        if (storedUser) {
-            setuserdetail(JSON.parse(storedUser));
+        if (!userdetail) {
+            document.title = 'MailCraft AI - AI-Driven Email Templates'
         }
-    }, []);
+    }, [userdetail])
 
     const handleLogout = () => {
-        localStorage.removeItem("userdetails");
-        setuserdetail(null);
+        // Clear user data from localStorage and state
+        localStorage.removeItem('userdetail')
+        setuserdetail(null)
         setMenuOpen(false)
+        // Explicitly set the title on logout
+        document.title = 'MailCraft AI - AI-Driven Email Templates'
         router.push('/')
     }
 
@@ -34,8 +38,8 @@ export const Header = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2">
-                        <Image src="/next.svg" height={40} width={40} alt="logo" />
-                        <span className="text-xl font-semibold text-gray-800">MyApp</span>
+                        <span className="text-2xl">✨</span>
+                        <span className="text-xl font-semibold text-gray-800">MailCraft AI</span>
                     </Link>
 
                     {/* Desktop Nav */}
