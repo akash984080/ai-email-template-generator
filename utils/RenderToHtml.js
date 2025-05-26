@@ -133,7 +133,7 @@ function renderComponent (component) {
 
       // Use table-based layout for better email client compatibility
       return `
-        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
           <tr>
             <td style="
               color: ${style.color || '#000'};
@@ -145,14 +145,36 @@ function renderComponent (component) {
               margin: ${style.margin || '0'};
               line-height: ${style.lineHeight || '1.5'};
               background-color: ${style.backgroundColor || 'transparent'};
+              mso-line-height-rule: exactly;
+              mso-padding-alt: ${style.padding || '8px'};
             ">
-              ${segments.map(seg => {
-                const segmentStyle = Object.entries(seg.style || {})
-                  .filter(([key]) => !['textShadow', 'letterSpacing', 'textTransform'].includes(key)) // Remove unsupported properties
-                  .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v}`)
-                  .join('; ');
-                return `<span style="${segmentStyle}">${seg.text}</span>`;
-              }).join('')}
+              <div style="
+                display: inline-block;
+                width: 100%;
+                color: ${style.color || '#000'};
+                background-color: ${style.backgroundColor || 'transparent'};
+              ">
+                ${segments.map(seg => {
+                  const segmentStyle = Object.entries(seg.style || {})
+                    .filter(([key]) => !['textShadow', 'letterSpacing', 'textTransform'].includes(key))
+                    .map(([k, v]) => {
+                      // Ensure color and background-color are properly set
+                      if (k === 'color' || k === 'backgroundColor') {
+                        return `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v || 'inherit'}`;
+                      }
+                      return `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v}`;
+                    })
+                    .join('; ');
+
+                  return `<span style="
+                    display: inline-block;
+                    ${segmentStyle};
+                    color: ${seg.style?.color || style.color || '#000'};
+                    background-color: ${seg.style?.backgroundColor || 'transparent'};
+                    mso-line-height-rule: exactly;
+                  ">${escapeHtml(seg.text)}</span>`;
+                }).join('')}
+              </div>
             </td>
           </tr>
         </table>`;

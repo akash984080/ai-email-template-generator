@@ -1,215 +1,3 @@
-
-
-
-// import React, { useState } from 'react';
-// import ButtonComponent from '../custom/Elements/ButtonComponent';
-// import TextComponent from '../custom/Elements/TextComponent';
-// import Imagecomponent from '../custom/Elements/Imagecomponent';
-// import LogoComponent from '../custom/Elements/LogoComponent';
-// import DividerComponent from '../custom/Elements/DividerComponent';
-// import LogoHeaderComponent from '../custom/Elements/LogoHeaderComponent';
-// import Socialicons from '../custom/Elements/Socialicons';
-// import { useDragDrop, useEmailTemplate, useSelectedElement } from '@/app/provider';
-// import { ArrowDown, ArrowUp, Trash2, Copy , MoreVertical } from 'lucide-react';
-// const Columnlayout = ({ layout }) => {
-//     const [dragOver, setDragover] = useState(null);
-//     const { emailTemplate, setEmailTemplate } = useEmailTemplate();
-//     const { dragElement, setDragElement } = useDragDrop();
-//     const { selectedElement, setSelectedElement } = useSelectedElement();
-//     const [showMenu, setShowMenu] = useState(false);
-
-//     // Function to handle drag-over
-//     const onDragOverHandle = (e, index) => {
-//         e.preventDefault();
-//         setDragover({
-//             index,
-//             columnId: layout?.id,
-//         });
-//     };
-
-//     // Function to handle drop event
-//     const onDropHandle = () => {
-//         const index = dragOver?.index;
-
-//         if (index !== undefined && layout?.id && dragElement?.dragElement) {
-//             setEmailTemplate((prev) =>
-//                 prev.map((col) =>
-//                     col.id === layout.id
-//                         ? { ...col, [index]: dragElement.dragElement }
-//                         : col
-//                 )
-//             );
-//         }
-//         setDragover(null);
-//     };
-
-//     // Function to get the appropriate component
-//     const getElementComponent = (element) => {
-//         switch (element?.type) {
-//             case 'Button':
-//                 return <ButtonComponent {...element} />;
-//             case 'Text':
-//                 // console.log(JSON.stringify(element));
-
-//                 return <TextComponent {...element} />;
-//             case 'Image':
-//                 return <Imagecomponent {...element} />;
-//             case 'Logo':
-//                 return <LogoComponent {...element} />;
-//             case 'Divider':
-//                 return <DividerComponent {...element} />;
-//             case 'LogoHeader':
-//                 return <LogoHeaderComponent {...element} />;
-//             case 'SocialIcons':
-//                 return <Socialicons {...element} />;
-//             default:
-//                 return <span>Invalid Element Type</span>;
-//         }
-//     };
-
-//     const handleLayoutdelete = (layoutId) => {
-//         const updatedLayout = emailTemplate?.filter(item => item.id !== layoutId);
-//         setEmailTemplate(updatedLayout);
-//         setSelectedElement(null);
-//     };
-
-//     const moveItemUp = (layoutId) => {
-//         const index = emailTemplate.findIndex((item) => item.id === layoutId);
-
-//         if (index > 0) {
-//             setEmailTemplate((prev) => {
-//                 const updatedItems = [...prev];
-//                 [updatedItems[index], updatedItems[index - 1]] = [
-//                     updatedItems[index - 1],
-//                     updatedItems[index],
-//                 ];
-//                 return updatedItems;
-//             });
-//         }
-//     };
-
-//     const moveItemDown = (layoutId) => {
-//         const index = emailTemplate.findIndex((item) => item.id === layoutId);
-
-//         if (index < emailTemplate.length - 1) {
-//             setEmailTemplate((prev) => {
-//                 const updatedItems = [...prev];
-//                 [updatedItems[index], updatedItems[index + 1]] = [
-//                     updatedItems[index + 1],
-//                     updatedItems[index],
-//                 ];
-//                 return updatedItems;
-//             });
-//         }
-//     };
-
-//     const duplicateLayout = (layoutId) => {
-//         const index = emailTemplate.findIndex((item) => item.id === layoutId);
-//         if (index !== -1) {
-//             const original = emailTemplate[index];
-//             const clone = {
-//                 ...original,
-//                 id: Date.now().toString(), 
-//             };
-//             const updated = [
-//                 ...emailTemplate.slice(0, index + 1),
-//                 clone,
-//                 ...emailTemplate.slice(index + 1),
-//             ];
-//             setEmailTemplate(updated);
-//         }
-//     };
-
-//     const handleLayoutClick = (index) => {
-//         setSelectedElement({ layout, index });
-//         setShowMenu(false); 
-//     };
-
-//     return (
-//         <div className='relative '>
-//             <div
-//                 style={{
-//                     display: 'grid',
-//                     gridTemplateColumns: `repeat(${layout?.numOfCol}, 1fr)`,
-//                     gap: '0px',
-//                 }}
-//             >
-//                 {Array.from({ length: layout?.numOfCol }).map((_, index) => (
-//                     <div
-//                         key={index}
-//                         className={`p-0 flex items-center justify-center h-full w-full bg-white cursor-pointer ${!layout?.[index]?.type &&
-//                             'bg-gray-100 border-2 border-dashed'
-//                             } ${index === dragOver?.index &&
-//                             dragOver?.columnId &&
-//                             'bg-green-200'
-//                             } ${selectedElement?.layout?.id === layout?.id &&
-//                             selectedElement?.index === index &&
-//                             'border-blue-500 border-4'
-//                             }`}
-//                         onDragOver={(e) => onDragOverHandle(e, index)}
-//                         onDrop={onDropHandle}
-//                         onClick={() => handleLayoutClick(index)} // Pass index here
-//                     >
-//                         {layout?.[index]
-//                             ? getElementComponent(layout[index])
-//                             : 'Drag Element Here'}
-//                     </div>
-//                 ))}
-
-//                 {selectedElement?.layout?.id === layout?.id && (
-//                     <div className="absolute -right-10 top-0">
-//                         <div className="relative">
-//                             <button
-//                                 className="bg-gray-100 p-2 rounded-full hover:scale-105 transition-all hover:shadow-md"
-//                                 onClick={() => setShowMenu((prev) => !prev)}
-//                             >
-//                                 <MoreVertical className="h-4 w-4 text-gray-700" />
-//                             </button>
-
-//                             {showMenu && (
-//                                 <div className="absolute top-10 right-0 bg-white border shadow-md rounded-md w-40 z-10">
-//                                     <div
-//                                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-//                                         onClick={() => duplicateLayout(layout.id)}
-//                                     >
-//                                         <Copy className="h-4 w-4 text-blue-600" />
-//                                         <span>Duplicate</span>
-//                                     </div>
-//                                     <div
-//                                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-//                                         onClick={() => handleLayoutdelete(layout.id)}
-//                                     >
-//                                         <Trash2 className="h-4 w-4 text-red-600" />
-//                                         <span>Delete</span>
-//                                     </div>
-//                                     <div
-//                                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-//                                         onClick={() => moveItemUp(layout.id)}
-//                                     >
-//                                         <ArrowUp className="h-4 w-4" />
-//                                         <span>Move Up</span>
-//                                     </div>
-//                                     <div
-//                                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-//                                         onClick={() => moveItemDown(layout.id)}
-//                                     >
-//                                         <ArrowDown className="h-4 w-4" />
-//                                         <span>Move Down</span>
-//                                     </div>
-//                                 </div>
-//                             )}
-//                         </div>
-//                     </div>
-//                 )}
-//             </div>
-//         </div>
-//     );
-// };
-
-
-// export default Columnlayout;
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import ButtonComponent from '../custom/Elements/ButtonComponent';
 import TextComponent from '../custom/Elements/TextComponent';
@@ -233,9 +21,6 @@ const Columnlayout = ({ layout, locked = false }) => {
   const [colWidths, setColWidths] = useState(initialWidths);
 
   const resizing = useRef({ isResizing: false, colIndex: null, startX: 0, startWidths: [] });
-
-
-
 
   // Handle drag-over
   const onDragOverHandle = (e, index) => {
@@ -386,11 +171,9 @@ const Columnlayout = ({ layout, locked = false }) => {
     );
   };
 
-
   const handleLayoutClick = (index) => {
     if (locked) return;
     setSelectedElement({ layout, index });
-
   };
 
   // Resize handlers
@@ -482,20 +265,36 @@ const Columnlayout = ({ layout, locked = false }) => {
 
   return (
     <div className="relative" ref={containerRef}>
-  
       <div className="flex w-full">
         {Array.from({ length: layout?.numOfCol }).map((_, index) => (
           <React.Fragment key={index}>
             <div
               className={getColumnClass(index)}
-              style={{ width: `${colWidths[index]}%`, transition: 'width 0.1s ease' }}
+              style={{ 
+                width: `${colWidths[index]}%`, 
+                transition: 'width 0.1s ease',
+                minWidth: '0',
+                flex: '1 1 auto',
+                overflow: 'visible',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch'
+              }}
               onDragOver={(e) => onDragOverHandle(e, index)}
               onDrop={onDropHandle}
               onClick={() => handleLayoutClick(index)}
             >
-              {layout?.[index]
-                ? getElementComponent(layout[index])
-                : 'Drag Element Here'}
+              <div style={{ 
+                width: '100%', 
+                minHeight: '1em',
+                position: 'relative',
+                overflow: 'visible'
+              }}>
+                {layout?.[index]
+                  ? getElementComponent(layout[index])
+                  : 'Drag Element Here'}
+              </div>
 
               {!locked && (
                 <div
@@ -508,12 +307,21 @@ const Columnlayout = ({ layout, locked = false }) => {
         ))}
 
         {selectedElement?.layout?.id === layout?.id && !locked && (
-          <LayoutMenu layout={layout} selectedElement={selectedElement} duplicateLayout={duplicateLayout} handleLayoutdelete={handleLayoutdelete} moveItemUp={moveItemUp} moveItemDown={moveItemDown} addColumn={addColumn} removeColumn={removeColumn} swapColumns={swapColumns} />
+          <LayoutMenu 
+            layout={layout} 
+            selectedElement={selectedElement} 
+            duplicateLayout={duplicateLayout} 
+            handleLayoutdelete={handleLayoutdelete} 
+            moveItemUp={moveItemUp} 
+            moveItemDown={moveItemDown} 
+            addColumn={addColumn} 
+            removeColumn={removeColumn} 
+            swapColumns={swapColumns} 
+          />
         )}
       </div>
     </div>
   );
-
 };
 
 export default Columnlayout;

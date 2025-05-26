@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useUserDetail } from '@/app/provider'
 import Link from 'next/link'
-import { Sparkles, PlusCircle, Mail, LayoutGrid, BarChart2, Tag, Clock, TrendingUp, Users } from 'lucide-react'
+import { Sparkles, PlusCircle, Mail, LayoutGrid, BarChart2, Tag, Clock, TrendingUp, Users, Edit, Send, Plus, History, CheckCircle, AlertCircle } from 'lucide-react'
 import { useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { useConvex } from 'convex/react'
@@ -32,8 +32,50 @@ const Dashboard = () => {
         const activeTemplates = templates.filter(t => t.isActive).length
         const totalOpens = templates.reduce((acc, t) => acc + (t.analytics?.totalOpens || 0), 0)
         const totalClicks = templates.reduce((acc, t) => acc + (t.analytics?.totalClicks || 0), 0)
-        const avgOpenRate = templates.reduce((acc, t) => acc + (t.analytics?.openRate || 0), 0) / totalTemplates || 0
-        const avgClickRate = templates.reduce((acc, t) => acc + (t.analytics?.clickRate || 0), 0) / totalTemplates || 0
+        
+        // Calculate average rates only for templates that have been sent
+        const sentTemplates = templates.filter(t => t.sentCount > 0)
+        const avgOpenRate = sentTemplates.length > 0 
+            ? sentTemplates.reduce((acc, t) => acc + (t.analytics?.openRate || 0), 0) / sentTemplates.length 
+            : 0
+        const avgClickRate = sentTemplates.length > 0
+            ? sentTemplates.reduce((acc, t) => acc + (t.analytics?.clickRate || 0), 0) / sentTemplates.length
+            : 0
+
+        // Calculate week-over-week changes
+        const now = new Date()
+        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        const templatesThisWeek = templates.filter(t => new Date(t._creationTime) >= lastWeek).length
+        const sentThisWeek = templates.reduce((acc, t) => {
+            const sentThisWeek = t.recipients?.filter(r => new Date(r.timestamp) >= lastWeek).length || 0
+            return acc + sentThisWeek
+        }, 0)
+
+        // Calculate most used category
+        const categoryCounts = templates.reduce((acc, t) => {
+            const category = t.category || 'Uncategorized'
+            acc[category] = (acc[category] || 0) + 1
+            return acc
+        }, {})
+        const mostUsedCategory = Object.entries(categoryCounts)
+            .sort(([,a], [,b]) => b - a)[0]?.[0] || 'None'
+
+        // Calculate week-over-week engagement changes
+        const opensThisWeek = templates.reduce((acc, t) => {
+            const opensThisWeek = t.analytics?.opens?.filter(o => new Date(o.timestamp) >= lastWeek).length || 0
+            return acc + opensThisWeek
+        }, 0)
+        const clicksThisWeek = templates.reduce((acc, t) => {
+            const clicksThisWeek = t.analytics?.clicks?.filter(c => new Date(c.timestamp) >= lastWeek).length || 0
+            return acc + clicksThisWeek
+        }, 0)
+
+        const openRateChange = totalSent > 0 
+            ? ((opensThisWeek / sentThisWeek) - (totalOpens / totalSent)) * 100 
+            : 0
+        const clickRateChange = totalSent > 0
+            ? ((clicksThisWeek / sentThisWeek) - (totalClicks / totalSent)) * 100
+            : 0
 
         return [
             { 
@@ -41,94 +83,34 @@ const Dashboard = () => {
                 value: totalTemplates,
                 subtext: `${activeTemplates} active`,
                 icon: LayoutGrid,
-                trend: '+2 this week'
+                trend: templatesThisWeek > 0 ? `+${templatesThisWeek} this week` : 'No new templates'
             },
             { 
                 label: 'Emails Sent', 
                 value: totalSent,
                 subtext: `${totalOpens} opens, ${totalClicks} clicks`,
                 icon: Mail,
-                trend: `${((totalOpens / totalSent) * 100).toFixed(1)}% open rate`
+                trend: totalSent > 0 
+                    ? `${((totalOpens / totalSent) * 100).toFixed(1)}% open rate ${openRateChange > 0 ? '↑' : openRateChange < 0 ? '↓' : ''}`
+                    : 'No emails sent yet'
             },
             { 
                 label: 'Active Campaigns', 
                 value: activeTemplates,
                 subtext: `${avgOpenRate.toFixed(1)}% avg open rate`,
                 icon: BarChart2,
-                trend: `${avgClickRate.toFixed(1)}% avg click rate`
+                trend: totalSent > 0 
+                    ? `${avgClickRate.toFixed(1)}% avg click rate ${clickRateChange > 0 ? '↑' : clickRateChange < 0 ? '↓' : ''}`
+                    : 'No active campaigns'
             },
             {
                 label: 'Categories',
-                value: new Set(templates.map(t => t.category).filter(Boolean)).size,
+                value: Object.keys(categoryCounts).length,
                 subtext: 'Unique categories',
                 icon: Tag,
-                trend: 'Most used: Promotional'
+                trend: `Most used: ${mostUsedCategory}`
             }
         ]
-    }, [templates])
-
-    // Generate detailed recent activity
-    const recentActivity = useMemo(() => {
-        if (!templates) return []
-        
-        const activities = []
-        templates.forEach(template => {
-            // Add version history activities
-            if (template.versionHistory) {
-                template.versionHistory.forEach(version => {
-                    activities.push({
-                        type: 'Updated',
-                        desc: `Version ${version.version} of ${template.description || 'Template'}`,
-                        date: new Date(version.timestamp).toISOString().split('T')[0],
-                        details: version.changes,
-                        category: template.category
-                    })
-                })
-            }
-
-            // Add recipient activities
-            if (template.recipients) {
-                template.recipients.forEach(recipient => {
-                    activities.push({
-                        type: recipient.status.charAt(0).toUpperCase() + recipient.status.slice(1),
-                        desc: `${template.description || 'Template'} ${recipient.status} by ${recipient.email}`,
-                        date: new Date(recipient.timestamp).toISOString().split('T')[0],
-                        category: template.category
-                    })
-                })
-            }
-
-            // Add template lifecycle activities
-            if (template.lastSent) {
-                activities.push({
-                    type: 'Sent',
-                    desc: `${template.description || 'Template'} sent to ${template.recipients?.length || 0} recipients`,
-                    date: new Date(template.lastSent).toISOString().split('T')[0],
-                    category: template.category,
-                    analytics: template.analytics
-                })
-            }
-            if (template.lastEdited) {
-                activities.push({
-                    type: 'Edited',
-                    desc: `Updated ${template.description || 'Template'}`,
-                    date: new Date(template.lastEdited).toISOString().split('T')[0],
-                    category: template.category
-                })
-            }
-            if (template._creationTime) {
-                activities.push({
-                    type: 'Created',
-                    desc: `New ${template.description || 'Template'}`,
-                    date: new Date(template._creationTime).toISOString().split('T')[0],
-                    category: template.category
-                })
-            }
-        })
-        
-        return activities
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .slice(0, 10)
     }, [templates])
 
     // Calculate category distribution
@@ -205,52 +187,6 @@ const Dashboard = () => {
                                     </CardContent>
                                 </Card>
                             ))}
-                        </div>
-
-                        {/* Category Distribution */}
-                    
-
-                        {/* Recent Activity */}
-                        <div className="mb-8">
-                            <h3 className="font-semibold text-lg mb-3">Recent Activity</h3>
-                            <div className="bg-white rounded-xl shadow divide-y">
-                                {recentActivity.map((item, idx) => (
-                                    <div key={idx} className="px-6 py-4">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-blue-600">{item.type}</span>
-                                                    {item.category && (
-                                                        <Badge variant="outline" className="text-xs">
-                                                            {item.category}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <p className="text-gray-700 mt-1">{item.desc}</p>
-                                                {item.details && (
-                                                    <p className="text-sm text-gray-500 mt-1">{item.details}</p>
-                                                )}
-                                                {item.analytics && (
-                                                    <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                                                        <span className="flex items-center gap-1">
-                                                            <TrendingUp className="w-4 h-4" />
-                                                            {item.analytics.openRate.toFixed(1)}% open rate
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Users className="w-4 h-4" />
-                                                            {item.analytics.clickRate.toFixed(1)}% click rate
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm text-gray-400">
-                                                <Clock className="w-4 h-4" />
-                                                {item.date}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
                         </div>
 
                         {/* Template Gallery */}

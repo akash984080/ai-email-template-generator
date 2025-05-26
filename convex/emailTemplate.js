@@ -147,7 +147,8 @@ export const saveOrUpdateTemplate = mutation({
     tId: v.string(),
     design: v.any(),
     email: v.string(),
-    description: v.string()
+    description: v.string(),
+    language: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     try {
@@ -167,7 +168,8 @@ export const saveOrUpdateTemplate = mutation({
         const docId = existing[0]._id;
         await ctx.db.patch(docId, {
           design: args.design,
-          description: args.description
+          description: args.description,
+          language: args.language
         });
         return { success: true, updated: true, message: 'Template updated' };
       } else {
@@ -176,7 +178,8 @@ export const saveOrUpdateTemplate = mutation({
           tId: args.tId,
           design: args.design,
           email: args.email,
-          description: args.description
+          description: args.description,
+          language: args.language || 'en'
         });
         return { success: true, created: true, message: 'Template created' };
       }

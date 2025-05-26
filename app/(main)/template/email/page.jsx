@@ -155,7 +155,7 @@ export default function SendEmailForm() {
                   <option value="">-- Choose a template --</option>
                   {allTemplates.map((tpl) => (
                     <option key={tpl.tId} value={tpl.tId} className="py-2">
-                      {tpl.description || tpl.tId}
+                      {tpl.description || tpl.tId} {tpl.language ? `(${tpl.language.toUpperCase()})` : ''}
                     </option>
                   ))}
                 </select>

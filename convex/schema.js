@@ -6,6 +6,7 @@ export default defineSchema({
     email: v.string(),
     design: v.string(),
     description: v.optional(v.string()),
+    language: v.optional(v.string()),
     sentCount: v.optional(v.number()),
     lastSent: v.optional(v.number()),
     createdAt: v.number(),
