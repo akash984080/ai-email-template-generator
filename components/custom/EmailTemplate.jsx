@@ -11,7 +11,6 @@ import { toast } from 'sonner'
 
 export const EmailTemplate = () => {
     const [EmailList, setEmailList] = useState([])
-    console.log(EmailList);
     
     const [loading, setLoading] = useState(true)
     const { userdetail } = useUserDetail()

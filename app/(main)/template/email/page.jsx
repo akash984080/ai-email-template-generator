@@ -81,7 +81,7 @@ export default function SendEmailForm() {
 
     try {
       const formData = {
-        from: email,
+        userEmail: email,
         to,
         cc: ccEnabled ? cc : undefined,
         bcc: bccEnabled ? bcc : undefined,

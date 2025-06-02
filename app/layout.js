@@ -18,11 +18,16 @@ export const metadata = {
   description: 'Create beautiful email templates with AI',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/mail.png', type: 'image/png', sizes: '32x32' },
+      { url: '/mail.png', type: 'image/png', sizes: '16x16' },
+      { url: '/mail.png', type: 'image/png', sizes: '48x48' },
     ],
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180' },
+      { url: '/mail.png', type: 'image/png', sizes: '180x180' },
+    ],
+    shortcut: [
+      { url: '/favicon.svg' }
     ],
   },
 }
