@@ -1,11 +1,14 @@
-
 import nodemailer from "nodemailer";
 import renderTemplateToHtml from "@/utils/RenderToHtml";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const {from, to, cc, bcc, subject, templateData, attachments } = body;
+    const { userEmail, to, cc, bcc, subject, templateData, attachments, templateId } = body;
 
     if (!to || !subject || !templateData) {
       return new Response(JSON.stringify({ error: "Missing required fields." }), {
@@ -14,37 +17,29 @@ export async function POST(request) {
       });
     }
 
-    const { GMAIL_USER, GMAIL_PASSWORD } = process.env;
-
-
-
     function createTransporter(provider) {
-  if (provider === "gmail") {
-    return nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASSWORD,
-      },
-    });
-  } else if (provider === "outlook") {
-    return nodemailer.createTransport({
-      service: "hotmail", 
-      auth: {
-        user: process.env.OUTLOOK_USER,
-        pass: process.env.OUTLOOK_PASSWORD,
-      },
-    });
-  } else {
-    throw new Error("Unsupported provider");
-  }
-}
+      if (provider === "gmail") {
+        return nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASSWORD,
+          },
+        });
+      } else if (provider === "outlook") {
+        return nodemailer.createTransport({
+          service: "hotmail", 
+          auth: {
+            user: process.env.OUTLOOK_USER,
+            pass: process.env.OUTLOOK_PASSWORD,
+          },
+        });
+      } else {
+        throw new Error("Unsupported provider");
+      }
+    }
 
     const transporter = createTransporter(body.provider || "gmail");
-
-
-
-    
 
     let htmlContent = renderTemplateToHtml(templateData);
     const mailAttachments = [];
@@ -72,7 +67,7 @@ export async function POST(request) {
     }
 
     const mailOptions = {
-      from: from,
+      from: userEmail,
       to,
       cc,
       bcc,
@@ -82,6 +77,28 @@ export async function POST(request) {
     };
 
     await transporter.sendMail(mailOptions);
+
+    // Update template stats after successful email send
+    if (templateId && userEmail) {
+      try {
+        // Get current template stats
+        const template = await convex.query(api.emailTemplate.GetTemplateDesign, {
+          tId: templateId,
+          email: userEmail
+        });
+
+        // Update sent count
+        await convex.mutation(api.emailTemplate.updateTemplateStats, {
+          tId: templateId,
+          email: userEmail,
+          sentCount: (template?.sentCount || 0) + 1,
+          lastSent: Date.now()
+        });
+      } catch (error) {
+        console.error("Error updating template stats:", error);
+        // Don't throw error here as email was sent successfully
+      }
+    }
 
     return new Response(JSON.stringify({ message: "Email sent successfully!" }), {
       status: 200,
